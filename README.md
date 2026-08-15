@@ -6,8 +6,6 @@ pipeline runs quality control, trimming, mapping to the mitochondrial reference,
 duplicate removal, mapping-quality reporting, and multi-sample variant calling,
 producing a single VCF for all samples plus an aggregated QC report.
 
-The layout follows the official
-[Snakemake tutorial](https://snakemake.readthedocs.io/en/stable/tutorial/tutorial.html):
 a `config/config.yaml`, per-stage conda environments under `envs/`, and the
 rules in `workflow/Snakefile`.
 
@@ -66,7 +64,8 @@ The raw data is not tracked in this repository (see `.gitignore`). Download the
 four single-end FASTQ files and the mitochondrial reference from the public
 Galaxy history:
 
-**https://usegalaxy.org/u/dfrisch/h/databloodcheek2024**
+**https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood-na**
+
 
 Save them into `data/` with these exact names so the workflow can find them:
 
