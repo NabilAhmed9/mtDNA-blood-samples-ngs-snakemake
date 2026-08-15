@@ -1,0 +1,7 @@
+name: mtdna-mapping
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bwa=0.7.18
+  - samtools=1.20

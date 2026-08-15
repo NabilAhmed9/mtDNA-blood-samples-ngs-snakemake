@@ -1,0 +1,7 @@
+name: mtdna-snakemake
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - snakemake-minimal>=8.0
+  - graphviz          # for `snakemake --dag | dot`

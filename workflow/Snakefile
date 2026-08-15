@@ -1,0 +1,245 @@
+# ============================================================
+# mtDNA variant-calling pipeline (single-end reads)
+# ============================================================
+# QC -> trim -> QC -> map (BWA-MEM, read groups) -> filter
+# unmapped -> remove duplicates -> mapping QC (QualiMap) ->
+# multi-sample variant calling (FreeBayes) -> IGV (manual).
+#
+# Layout follows the official Snakemake tutorial:
+#   https://snakemake.readthedocs.io/en/stable/tutorial/tutorial.html
+# ============================================================
+
+configfile: "config/config.yaml"
+
+SAMPLES = config["samples"]
+REF     = config["reference"]
+EXT     = config["fastq_ext"]
+OUT     = config["outdir"]
+THREADS = config["threads"]
+
+
+# ------------------------------------------------------------
+# rule all: the final targets that define the whole DAG
+# ------------------------------------------------------------
+rule all:
+    input:
+        # aggregated QC report (pre- and post-trim)
+        f"{OUT}/qc/multiqc/multiqc_report.html",
+        # per-sample mapping-quality reports
+        expand(f"{OUT}/qualimap/{{sample}}/qualimapReport.html", sample=SAMPLES),
+        # single multi-sample VCF
+        f"{OUT}/variants/all_samples.vcf",
+
+
+# ------------------------------------------------------------
+# Reference preparation
+# ------------------------------------------------------------
+rule bwa_index:
+    """Build the BWA index for the reference (skipped if it exists)."""
+    input:
+        REF,
+    output:
+        multiext(REF, ".amb", ".ann", ".bwt", ".pac", ".sa"),
+    conda:
+        "../envs/mapping.yaml"
+    shell:
+        "bwa index {input}"
+
+
+rule samtools_faidx:
+    """Create the .fai index required by QualiMap and FreeBayes."""
+    input:
+        REF,
+    output:
+        f"{REF}.fai",
+    conda:
+        "../envs/mapping.yaml"
+    shell:
+        "samtools faidx {input}"
+
+
+# ------------------------------------------------------------
+# Step 1: Quality control on raw reads (FastQC)
+# ------------------------------------------------------------
+rule fastqc_raw:
+    input:
+        f"data/{{sample}}.{EXT}",
+    output:
+        html=f"{OUT}/qc/raw/{{sample}}_fastqc.html",
+        zip=f"{OUT}/qc/raw/{{sample}}_fastqc.zip",
+    conda:
+        "../envs/qc.yaml"
+    shell:
+        f"fastqc -o {OUT}/qc/raw {{input}}"
+
+
+# ------------------------------------------------------------
+# Step 2: Adapter/quality trimming (Trimmomatic, single-end)
+# ------------------------------------------------------------
+rule trimmomatic:
+    input:
+        f"data/{{sample}}.{EXT}",
+    output:
+        f"{OUT}/trimmed/{{sample}}.trimmed.fastq",
+    log:
+        f"{OUT}/trimmed/logs/{{sample}}.trimmomatic.log",
+    params:
+        window=config["trimmomatic"]["window"],
+        qual=config["trimmomatic"]["quality"],
+        minlen=config["trimmomatic"]["minlen"],
+    conda:
+        "../envs/qc.yaml"
+    threads: THREADS
+    shell:
+        "trimmomatic SE -threads {threads} -phred33 {input} {output} "
+        "SLIDINGWINDOW:{params.window}:{params.qual} MINLEN:{params.minlen} "
+        "2> {log}"
+
+
+# ------------------------------------------------------------
+# Step 3a: Quality control on trimmed reads (FastQC)
+# ------------------------------------------------------------
+rule fastqc_trimmed:
+    input:
+        f"{OUT}/trimmed/{{sample}}.trimmed.fastq",
+    output:
+        html=f"{OUT}/qc/trimmed/{{sample}}.trimmed_fastqc.html",
+        zip=f"{OUT}/qc/trimmed/{{sample}}.trimmed_fastqc.zip",
+    conda:
+        "../envs/qc.yaml"
+    shell:
+        f"fastqc -o {OUT}/qc/trimmed {{input}}"
+
+
+# ------------------------------------------------------------
+# Step 3b: Aggregate all QC into one report (MultiQC)
+# ------------------------------------------------------------
+rule multiqc:
+    """Collect pre- and post-trim FastQC plus Trimmomatic logs."""
+    input:
+        expand(f"{OUT}/qc/raw/{{sample}}_fastqc.zip", sample=SAMPLES),
+        expand(f"{OUT}/qc/trimmed/{{sample}}.trimmed_fastqc.zip", sample=SAMPLES),
+        expand(f"{OUT}/trimmed/logs/{{sample}}.trimmomatic.log", sample=SAMPLES),
+    output:
+        f"{OUT}/qc/multiqc/multiqc_report.html",
+    conda:
+        "../envs/qc.yaml"
+    shell:
+        # Scan the QC and trimmed directories; overwrite any prior report.
+        f"multiqc {OUT}/qc {OUT}/trimmed "
+        f"-o {OUT}/qc/multiqc -n multiqc_report.html --force"
+
+
+# ------------------------------------------------------------
+# Step 4: Mapping (BWA-MEM) with explicit read groups
+# ------------------------------------------------------------
+# Read groups are set by hand (no auto-assign) so FreeBayes can
+# separate calls per sample. The RG string is built in params as a
+# raw string; the literal "\t" is passed inside single quotes and
+# interpreted by bwa itself, which avoids Snakemake turning it into
+# a real tab character.
+rule bwa_map:
+    input:
+        reads=f"{OUT}/trimmed/{{sample}}.trimmed.fastq",
+        ref=REF,
+        idx=multiext(REF, ".amb", ".ann", ".bwt", ".pac", ".sa"),
+    output:
+        f"{OUT}/bam/{{sample}}.sorted.bam",
+    log:
+        f"{OUT}/bam/logs/{{sample}}.bwa.log",
+    params:
+        rg=lambda wc: r"@RG\tID:{s}\tSM:{s}\tPL:{pl}\tLB:{lb}".format(
+            s=wc.sample, pl=config["platform"], lb=config["library"]
+        ),
+    conda:
+        "../envs/mapping.yaml"
+    threads: THREADS
+    shell:
+        "bwa mem -t {threads} -R '{params.rg}' {input.ref} {input.reads} 2> {log} "
+        "| samtools sort -@ {threads} -o {output} - && "
+        "samtools index {output}"
+
+
+# ------------------------------------------------------------
+# Step 5: Remove unmapped reads (bitwise flag 4)
+# ------------------------------------------------------------
+rule filter_unmapped:
+    """Keep only mapped reads: -F 4 drops records with the UNMAP flag."""
+    input:
+        f"{OUT}/bam/{{sample}}.sorted.bam",
+    output:
+        f"{OUT}/bam/{{sample}}.mapped.bam",
+    conda:
+        "../envs/mapping.yaml"
+    threads: THREADS
+    shell:
+        "samtools view -@ {threads} -b -F 4 {input} > {output} && "
+        "samtools index {output}"
+
+
+# ------------------------------------------------------------
+# Step 6: Remove PCR duplicates (samtools markdup)
+# ------------------------------------------------------------
+# markdup wants coordinate-sorted input carrying fixmate tags, so the
+# chain is: name-sort -> fixmate -m -> coordinate-sort -> markdup -r.
+# -r removes flagged duplicates rather than only marking them.
+rule mark_duplicates:
+    input:
+        f"{OUT}/bam/{{sample}}.mapped.bam",
+    output:
+        bam=f"{OUT}/bam/{{sample}}.dedup.bam",
+        bai=f"{OUT}/bam/{{sample}}.dedup.bam.bai",
+    log:
+        f"{OUT}/bam/logs/{{sample}}.markdup.log",
+    conda:
+        "../envs/mapping.yaml"
+    threads: THREADS
+    shell:
+        "samtools sort -n -@ {threads} {input} 2> {log} "
+        "| samtools fixmate -m - - 2>> {log} "
+        "| samtools sort -@ {threads} - 2>> {log} "
+        "| samtools markdup -r - {output.bam} 2>> {log} && "
+        "samtools index {output.bam}"
+
+
+# ------------------------------------------------------------
+# Step 7: Mapping-quality report (QualiMap)
+# ------------------------------------------------------------
+rule qualimap:
+    input:
+        bam=f"{OUT}/bam/{{sample}}.dedup.bam",
+        bai=f"{OUT}/bam/{{sample}}.dedup.bam.bai",
+    output:
+        f"{OUT}/qualimap/{{sample}}/qualimapReport.html",
+    params:
+        outdir=f"{OUT}/qualimap/{{sample}}",
+    conda:
+        "../envs/qualimap.yaml"
+    threads: THREADS
+    shell:
+        "qualimap bamqc -bam {input.bam} -outdir {params.outdir} "
+        "-outformat HTML --java-mem-size=4G -nt {threads}"
+
+
+# ------------------------------------------------------------
+# Step 8: Variant calling (FreeBayes) -> one multi-sample VCF
+# ------------------------------------------------------------
+# All four deduplicated BAMs are passed together; FreeBayes uses the
+# SM read-group tags to report one genotype column per sample.
+rule freebayes:
+    input:
+        bams=expand(f"{OUT}/bam/{{sample}}.dedup.bam", sample=SAMPLES),
+        bais=expand(f"{OUT}/bam/{{sample}}.dedup.bam.bai", sample=SAMPLES),
+        ref=REF,
+        fai=f"{REF}.fai",
+    output:
+        f"{OUT}/variants/all_samples.vcf",
+    log:
+        f"{OUT}/variants/logs/freebayes.log",
+    params:
+        extra=config["freebayes"]["extra"],
+    conda:
+        "../envs/variantcalling.yaml"
+    shell:
+        "freebayes -f {input.ref} {params.extra} {input.bams} "
+        "> {output} 2> {log}"

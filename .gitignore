@@ -1,0 +1,23 @@
+# Snakemake internals
+.snakemake/
+
+# Pipeline outputs (reproducible by re-running the workflow)
+results/
+
+# Raw data and reference (usually too large / not for version control)
+data/*.fastq
+data/*.fastq.gz
+data/*.fq
+data/*.fq.gz
+data/*.fa
+data/*.fa.fai
+data/*.fa.amb
+data/*.fa.ann
+data/*.fa.bwt
+data/*.fa.pac
+data/*.fa.sa
+
+# Conda / OS cruft
+*.pyc
+__pycache__/
+.DS_Store

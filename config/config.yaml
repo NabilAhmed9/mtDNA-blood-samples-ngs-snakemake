@@ -1,0 +1,47 @@
+# ============================================================
+# Configuration for the mtDNA variant-calling Snakemake workflow
+# ============================================================
+# Edit values here rather than in the Snakefile. After changing
+# a parameter, re-running `snakemake` will only re-execute the
+# rules affected by that change.
+
+# --- Samples --------------------------------------------------
+# One entry per single-end FASTQ file, without the extension.
+# The read-group sample name (SM tag) is taken directly from these,
+# so keep them clean (e.g. "Blood-PCR1", not "Trimmomatic on ...").
+samples:
+  - Blood-PCR1
+  - Blood-PCR2
+  - Cheek-PCR1
+  - Cheek-PCR2
+
+# FASTQ extension of the raw files in data/ (e.g. fastq or fq).
+# If your reads are gzipped, set this to "fastq.gz" and see the
+# note in the README about the FastQC/Trimmomatic input glob.
+fastq_ext: fastq
+
+# --- Reference ------------------------------------------------
+reference: data/chrM.fa
+
+# --- Read-group metadata (required by FreeBayes) --------------
+platform: ILLUMINA
+library: lib1
+
+# --- Trimmomatic (single-end) ---------------------------------
+trimmomatic:
+  window: 4      # SLIDINGWINDOW size
+  quality: 20    # SLIDINGWINDOW average quality threshold
+  minlen: 20     # MINLEN
+
+# --- FreeBayes ------------------------------------------------
+freebayes:
+  # Extra flags passed verbatim to freebayes. Empty reproduces the
+  # basic (diploid) Galaxy-style call. For mitochondrial data where
+  # you want to detect heteroplasmy, a common choice is:
+  #   "--pooled-continuous --min-alternate-fraction 0.05 --min-alternate-count 2"
+  # See the README "Interpreting the VCF" section before changing this.
+  extra: ""
+
+# --- Output & resources --------------------------------------
+outdir: results
+threads: 4
