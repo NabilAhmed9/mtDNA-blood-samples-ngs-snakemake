@@ -197,28 +197,3 @@ persist after the container exits.
 
 ---
 
-## Publishing to GitHub
-
-```bash
-cd mtDNA-blood-samples-ngs-snakemake
-
-git init
-git add .
-git commit -m "mtDNA variant-calling Snakemake workflow"
-
-# Create an empty repo named mtDNA-blood-samples-ngs-snakemake on GitHub first
-# (no README/license, to avoid a merge on first push), then:
-git branch -M main
-git remote add origin https://github.com/<your-username>/mtDNA-blood-samples-ngs-snakemake.git
-git push -u origin main
-```
-
-`results/` and the large `data/` files are excluded by `.gitignore`, so only the
-workflow, configuration, and documentation are versioned. The raw FASTQ files
-and reference are not committed; anyone who clones the repo downloads them from
-the Galaxy history linked in the "Input data" section, drops them into `data/`,
-and reproduces every output with a single `snakemake --use-conda` call.
-
-Repository name: `mtDNA-blood-samples-ngs-snakemake`
-Suggested Description field (spaces and punctuation are fine here):
-`mtDNA blood samples (NGS; Snakemake)`
