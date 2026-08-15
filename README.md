@@ -64,7 +64,7 @@ The raw data is not tracked in this repository (see `.gitignore`). Download the
 four single-end FASTQ files and the mitochondrial reference from the public
 Galaxy history:
 
-**https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood-na**
+**https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood**
 
 
 Save them into `data/` with these exact names so the workflow can find them:
