@@ -1,7 +1,7 @@
 
 # 🧬 mtDNA Blood Samples (NGS; Snakemake)
 
-<<<<<<< HEAD
+
 > **Reproducible Snakemake workflow for calling variants from human mitochondrial DNA sequencing data.**  
 > Processes single-end reads from blood and cheek-swab samples through QC, trimming, mapping, duplicate removal, and multi-sample variant calling.
 
@@ -12,7 +12,7 @@
 =======
 a `config/config.yaml`, per-stage conda environments under `envs/`, and the
 rules in `workflow/Snakefile`.
->>>>>>> be20830c9a13acf9e97e7443bdeb12c47bd12516
+
 
 ---
 
@@ -83,14 +83,14 @@ The raw data is **not tracked** in this repository (see `.gitignore`). Download 
 
 🔗 **Only requested by email: nabil.ahmed@web.de**
 
-<<<<<<< HEAD
+
 Save them into `data/` with these **exact** names:
 =======
 **https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood**
 
 
 Save them into `data/` with these exact names so the workflow can find them:
->>>>>>> be20830c9a13acf9e97e7443bdeb12c47bd12516
+
 
 ```
 data/
@@ -261,7 +261,7 @@ Mounting `data/` and `results/` keeps inputs and outputs on the host so results 
 
 ---
 
-<<<<<<< HEAD
+
 ## ❓ Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -324,4 +324,4 @@ If you use this workflow in your research or teaching, please cite it as:
 
 Open an issue on GitHub or refer to the **Troubleshooting** section above.
 =======
->>>>>>> be20830c9a13acf9e97e7443bdeb12c47bd12516
+
