@@ -3,7 +3,7 @@ Raw data is NOT stored in this repository.
 Download the four single-end FASTQ files and the mitochondrial reference from
 the public Galaxy history:
 
-  https://usegalaxy.org/u/dfrisch/h/databloodcheek2024
+  https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood
 
 Save them here with these exact names:
 
