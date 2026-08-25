@@ -1,4 +1,3 @@
-
 # 🧬 mtDNA Blood Samples (NGS; Snakemake)
 
 
@@ -9,10 +8,6 @@
 [![Conda](https://img.shields.io/badge/Conda-Miniforge-blue?logo=anaconda)](https://github.com/conda-forge/miniforge)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-ready-brightgreen)]()
-=======
-a `config/config.yaml`, per-stage conda environments under `envs/`, and the
-rules in `workflow/Snakefile`.
-
 
 ---
 
@@ -81,16 +76,10 @@ snakemake --version
 
 The raw data is **not tracked** in this repository (see `.gitignore`). Download the four single-end FASTQ files and the mitochondrial reference from the public Galaxy history:
 
-🔗 **Only requested by email: nabil.ahmed@web.de**
-
-
-Save them into `data/` with these **exact** names:
-=======
-**https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood**
+🔗 **https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood**
 
 
 Save them into `data/` with these exact names so the workflow can find them:
-
 
 ```
 data/
@@ -302,5 +291,3 @@ If you use this workflow in your research or teaching, please cite it as:
 ## 🙋 Questions or Issues?
 
 Open an issue on GitHub or refer to the **Troubleshooting** section above.
-=======
-
