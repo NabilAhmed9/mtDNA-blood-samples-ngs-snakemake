@@ -275,38 +275,18 @@ Mounting `data/` and `results/` keeps inputs and outputs on the host so results 
 
 ---
 
-## 🚀 Publishing to GitHub
-
-```bash
-cd mtDNA-blood-samples-ngs-snakemake
-
-git init
-git add .
-git commit -m "mtDNA variant-calling Snakemake workflow"
-
-# Create an empty repo named mtDNA-blood-samples-ngs-snakemake on GitHub first
-# (no README/license, to avoid a merge on first push), then:
-git branch -M main
-git remote add origin https://github.com/<your-username>/mtDNA-blood-samples-ngs-snakemake.git
-git push -u origin main
-```
-
-`results/` and the large `data/` files are excluded by `.gitignore`, so only the workflow, configuration, and documentation are versioned. Anyone who clones the repo downloads the raw files from the Galaxy history linked above, drops them into `data/`, and reproduces every output with a single `snakemake --use-conda` call.
-
----
-
 ## 📚 Citation
 
 If you use this workflow in your research or teaching, please cite it as:
 
 ```bibtex
 @software{mtdna_blood_samples_snakemake,
-  author       = {Your Name},
+  author       = {Nabil Ahmed},
   title        = {mtDNA Blood Samples (NGS; Snakemake): A Reproducible Workflow for Mitochondrial Variant Calling},
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},
-  howpublished = {\url{https://github.com/<your-username>/mtDNA-blood-samples-ngs-snakemake}},
+  howpublished = {\url{https://github.com/NabilAhmed9/mtDNA-blood-samples-ngs-snakemake}},
   note         = {Snakemake workflow for QC, trimming, mapping, and variant calling of human mtDNA amplicon data.}
 }
 ```
@@ -316,7 +296,6 @@ If you use this workflow in your research or teaching, please cite it as:
 ## 📄 License
 
 - **Analysis code:** MIT License (see `LICENSE`).
-- **Dataset / reference:** Retrieved from the public Galaxy history linked above; please cite the original data source if required by your institution.
 
 ---
 
