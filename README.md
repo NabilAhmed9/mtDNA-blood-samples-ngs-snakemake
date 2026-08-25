@@ -76,7 +76,7 @@ snakemake --version
 
 The raw data is **not tracked** in this repository (see `.gitignore`). Download the four single-end FASTQ files and the mitochondrial reference from the public Galaxy history:
 
-🔗 **https://usegalaxy.org/u/nabil.ahmed/h/mtdna-blood**
+🔗 **requested only by email: nabil.ahmed@web.de**
 
 
 Save them into `data/` with these exact names so the workflow can find them:
@@ -153,7 +153,7 @@ mtDNA-blood-samples-ngs-snakemake/
 | Tissue types | 2 blood, 2 cheek swab |
 | Reference | `chrM.fa` (human mitochondrial genome) |
 | Read groups | Explicitly set during `bwa_map` (used by FreeBayes) |
-| Source | [Galaxy history](https://usegalaxy.org/u/dfrisch/h/databloodcheek2024) |
+| Source | [Galaxy history](nabil.ahmed@web.de) |
 
 ---
 
